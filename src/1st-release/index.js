@@ -3,7 +3,7 @@ const context = screen.getContext('2d')
 const currentPlayerId = 'player1'
 
 
-const game = {
+const state = {
     players: {
         'player1': { x: 1, y: 1 },
         'player2': { x: 9, y: 9 },
@@ -13,47 +13,89 @@ const game = {
     }
 }
 
-document.addEventListener('keydown' ,handleKeydown)
+function createGame(){
+    function movePlayer(command){
+        console.log(`Moving ${command.playerId} with ${command.keyPress}`)
 
-function handleKeydown(event){
-    const keyPress = event.key
-    const player = game.players[currentPlayerId]
+        const keyPress = command.keyPress
+        const player = state.players[command.playerId]
 
-    if(keyPress === 'ArrowUp' && player.y - 1 >= 0){
-        player.y -= 1
-        console.log('Up')
-        return
+        if(keyPress === 'ArrowUp' && player.y - 1 >= 0){
+            player.y -= 1
+            return
+        }
+        if(keyPress === 'ArrowDown' && player.y + 1 < screen.height){
+            player.y += 1
+            return
+        }
+        if(keyPress === 'ArrowLeft'  && player.x - 1 >= 0){
+            player.x -= 1
+            return
+        }
+        if(keyPress === 'ArrowRight' && player.x + 1 < screen.width){
+            player.x += 1
+            return
+        }
     }
-    if(keyPress === 'ArrowDown' && player.y + 1 < screen.height){
-        player.y += 1
-        console.log('Down')
-        return
+
+    return {
+        movePlayer,
+        state
     }
-    if(keyPress === 'ArrowLeft'  && player.x - 1 >= 0){
-        player.x -= 1
-        console.log('Left')
-        return
+}
+
+const game = createGame()
+const keyboardListener = createKeyboardListener()
+keyboardListener.subscribe(game.movePlayer)
+
+function createKeyboardListener(){
+    const state = {
+        observers: []
     }
-    if(keyPress === 'ArrowRight' && player.x + 1 < screen.width){
-        player.x += 1
-        console.log('Right')
-        return
+
+    function subscribe(observerFunction){
+        state.observers.push(observerFunction)
+    }
+
+    function notifyAll(command){
+        console.log(`Notify ${state.observers.length} observers`)
+
+        for(const observerFunction of state.observers){
+            observerFunction(command)
+        }
+    }
+
+    document.addEventListener('keydown' ,handleKeydown)
+
+    function handleKeydown(event){
+        const keyPress = event.key
+        
+        const command = {
+            playerId: 'player1',
+            keyPress
+        }
+
+        notifyAll(command)
+    }
+
+    return {
+        subscribe,
     }
 }
 
 renderScreen()
 
     function renderScreen(){
-        context.clearRect(0, 0, 10, 10)
+        context.clearRect(0, 0, 20, 20)
         
-        for(const playerId in game.players){
-            const player = game.players[playerId]
+        for(const playerId in state.players){
+            const player = state.players[playerId]
             context.fillStyle = 'black'
             context.fillRect(player.x, player.y, 1, 1)
         }
 
-        for(const fruitId in game.fruits){
-            const fruit = game.fruits[fruitId]
+        for(const fruitId in state.fruits){
+            const fruit = state.fruits[fruitId]
             context.fillStyle = 'green'
             context.fillRect(fruit.x, fruit.y, 1, 1)
         }
