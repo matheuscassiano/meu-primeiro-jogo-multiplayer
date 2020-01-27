@@ -9,8 +9,16 @@ keyboardListener.subscribe(game.movePlayer)
 const screen = document.getElementById('screen')
 renderScreen(screen, game, requestAnimationFrame)
 
-game.addPlayer({playerId: 'player1', playerX:10, playerY:9})
-game.addPlayer({playerId: 'player2', playerX:10, playerY:5})
-game.addPlayer({playerId: 'player3', playerX:7, playerY:10})
-game.addFruit({fruitId: 'fruit1', fruitX:10, fruitY:10})
-game.addFruit({fruitId: 'fruit2', fruitX:5, fruitY:3})
+const socket = io()
+
+socket.on('connect', () => {
+    const playerId = socket.id
+    console.log(`> Player connected on Client with id: ${playerId}`)
+})
+
+socket.on('setup', (state) => {
+    console.log(state)
+    console.log(`> Receiving "setup" event from server`)
+
+    game.state = state
+})
